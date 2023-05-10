@@ -1,0 +1,2 @@
+#!/bin/bash
+srun "$@" --export=ALL --x11 --pty bash -i
