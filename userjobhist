@@ -4,7 +4,7 @@ if test $# -ne 2
         then
 			echo "Display user job history"
 			echo "Default to display job history for last 7 days for current user"
-			echo " userjobhist days user"
+			echo "Usage: userjobhist days user"
 fi			
 
 set -e -o pipefail
@@ -33,7 +33,7 @@ fi
 # Set sacct format
 format=user%9,start%10,jobid%13,jobname%12,partition,state,elapsed%11,nnodes%5,ncpus%4,reqmem%8,reqtres%-50
 
-printf "%s\n" "---------------------------------------------------------------------------------------------------------"
+printf "%s\n" "----------------------------------------------------------------------------------------------------------"
 printf "%s\n" "   User   Startdate        Job ID     Job Name  Partition      State     Elapsed Nodes CPUs   Memory GPUs"
 printf "%s\n" "--------- ---------- ------------- ------------ ---------- ---------- ----------- ----- ---- -------- ----"
 sacct -n -X -o $format -u $user -S $(date --date="-$days day" +%Y-%m-%d) |
