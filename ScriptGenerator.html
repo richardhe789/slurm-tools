@@ -1,0 +1,626 @@
+<html lang="en">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.9">
+      <title>Slurm Job Script Generator</title>
+      <script src="https://cdn.plot.ly/plotly-2.20.0.min.js" charset="utf-8"></script>
+      <style id="plotly.js-style-global"></style>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"  crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"   crossorigin="anonymous" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js"  crossorigin="anonymous"  ></script>
+   </head>
+   <body>
+            <h1 >
+               <center>Slurm Job Script Generator</center>
+            </h1>
+            <p>This page generates job scripts for <a href="https://slurm.schedmd.com/">Slurm</a> workload manager. It helps to get started with some of the possibilities and how the syntax works.</p>
+            <p>Enter the details of your job in the form below and then click on the make script button at the bottom.</p>
+            <div class="scriptgen">
+               <form>
+                  <div>
+                     <p>
+                        1. It is a good idea to give your job a meaningful name. This will help you identify it when listing the job queue.
+                     </p>
+                     <label for="name">Job Name: </label>
+                     <input id="name" type="text" >
+                  </div>
+                  <br>
+                  <div>
+                     <p >
+                        2. Specify the project ID to which this job should be attributed. For example, matlab001.
+                     </p>
+                     <label for="projectid">Project ID: </label>
+                     <input id="projectid" type="text" >
+                  </div>
+                  <br>
+                  <div>
+                     <p>
+                        3. Specify the partition on which this job should be launched.
+                     </p>
+                     <label for="partition">Partition: </label>
+                     <select id="partition">
+                        <option value="default">default</option>
+                        <option value="hybrid">hybrid</option>
+                        <option value="gpu">gpu</option>
+                     </select>
+                  </div>
+                  <br>
+                  <p >
+                     4. Specify whether your job needs one or more cores.  
+                  </p>
+                  <div>
+                     <label for="projectid">Job Type: </label>
+                     <select id="jobtype">
+                        <option value="single" selected="selected">Single Core</option>
+                        <option value="multithreaded">Multithreaded (SMP)</option>
+                        <option value="mpi">MPI, single or multiple node</option>
+                     </select>
+                  </div>
+                  <div id="jobtype-modal" class="modal fade" role="dialog">
+                     <div class="modal-dialog">
+                        <div class="modal-content">
+                           <div class="modal-header">
+                           </div>
+                           <!-- modal-header -->
+                           <div class="modal-body">
+                              <p><strong>Single Core</strong> 
+                                 : Suitable for single CPU core jobs only (not parallel). 
+                              </p>
+                              <strong>Multithreaded (SMP)</strong>
+                              : Suitable for shared-memory multithreaded jobs. <em>Note</em> these jobs cannot use more than one node and cannot use more cores than the number of cores on a node. </p>
+                              <p><strong>MPI</strong>
+                                 : Suitable for distributed parallel jobs that use MPI. May use more than one cluster node. These are allocated to the "physical" partition.
+                              </p>
+                              <strong>Notes</strong>
+                              : If the job submission is more complex that these deliberately restrictive criteria (e.g., SMP jobs with more than 12 cores, MPI jobs with specific node allocations, GPU partition and GRES requirements), then you should be at the stage of writing your own scripts! 
+                           </div>
+                           <!-- modal-body -->
+                        </div>
+                        <!-- modal-content -->
+                     </div>
+                     <!-- modal-dialog -->
+                  </div>
+                  <!-- jobtype-modal -->
+                  <br>
+                  <div>
+                     <p>
+                        5. The maximum number of CPU cores needed by your job.
+                     </p>
+                     <label for="cores">CPU Cores (total): </label>
+                     <input id="cores" type="text"  value="1">
+                  </div>
+                  <br>
+                  <div>
+                     <p>
+                        6. The number of GPUs you would like, per node. If you selected the partition gpu, please ensure this value is more than 0
+                     </p>
+                     <label for="gpus">GPUs (per node): </label>
+                     <input id="gpus" type="text"  value="0">
+                  </div>
+                  <br>
+                  <div>
+                     <p>
+                       7. The Slurm QoS for the job. E.g. <code>normal </code>
+                     </p>
+                     <label for="qos">Slurm QoS: </label>
+                     <input id="qos" type="text"  value="">
+                  </div>
+                  <br>
+                  <div>
+                     <p>
+                       8. Specify the memory this job required.
+                     </p>
+                     <label for="memory">Required Memory (GB): </label>
+                     <input id="memory" type="text" >
+                  </div>
+				  
+				                                <p><strong>Single Core and MPI</strong>
+                                 : For Single Core and MPI jobs this specifies the amount of memory allocated to each CPU core requested by the job. The total memory used is equal to the number of cores in the job multiplied by the amount of memory requested. If you leave this blank then your job will be allocated 4000 megabytes per CPU core.
+                              </p>
+                              <p>For example if you request 2 CPU cores and 8GB of memory per core, the total memory used by the job is 16GB.</p>
+                              <p> <strong>Multithreaded (SMP) jobs</strong>
+                                 : For Multithreaded (SMP) jobs this is the total memory allocated per node, irrespective of the number of CPU cores.
+                              </p>
+
+                  <p >
+                     Leave this blank to use the default.  
+                  </p>
+                  <br>
+                  <div>
+                     <label for="emailaddress">9. Notification Email: </label>
+                     <input id="emailaddress" type="text" > 
+                     <p>
+                        <input id="emailjobstart" type="checkbox"> Job Starts<br>
+                        <input id="emailjobend" type="checkbox"> Job Ends (Success)<br>
+                        <input id="emailjobdie" type="checkbox"> Job Ends (Error)<br>
+                     <p >
+                        You can be notified by email when your job starts running or when it ends (either successfully or with an error).
+                     </p>
+                  </div>
+                  <br>
+                  <div>
+                     <p>
+                        10. Maximum amount of time needed for your job to complete (it will be terminated after this time).
+                     </p>
+                     <label for="days">Walltime: </label>
+                     <p>
+                        <input id="days" type="text" value="0" > days
+                     <p>
+                        <input id="hours" type="text" value="1" > hours
+                     <p>
+                        <input id="minutes" type="text" value="0" > minutes
+                  </div>
+                  <br>
+                  <p>
+                     11. The working directory for your job  
+                  </p>
+                  <div>
+                     <p>Each job is run from a given directory on the computer's filesystem - this is called the <em>working directory</em> in Unix terminology.</p>
+                     <p>You need to set the working directory correctly so that your job can find its input files and generate its output files in the appropriate location. In most cases it is desirable to set this to the directory where the job was launched, but you might also like it to be your home directory, or from some other specific directory on the computer.</p>
+                     <p>If you specify the directory, it must be an absolute reference (i.e. /home/rhe/mydir) or relative to the launch directory.</p>
+                     <label for="workdir">Directory to run the job from:</label><br>
+                     <div>
+                        <input checked="" aria-required="true" id="workdir" value="workdir" name="directory" type="radio" data-error="Please make a selection">
+                        <label for="workdir">
+                        <span>The same directory where it is launched</span>
+                        </label>
+                     </div>
+                     <div>
+                        <input aria-required="true" id="homedir" value="homedir" name="directory" type="radio" data-error="Please make a selection">
+                        <label for="workdir">
+                        <span>Home directory</span>
+                        </label>
+                     </div>
+                     <div>
+                        <input aria-required="true" id="otherdir" value="otherdir" name="directory" type="radio" data-error="Please make a selection">
+                        <label for="workdir">
+                        <span>Other</span>
+                        </label>
+                        <input id="otherdirname" type="text" >
+                     </div>
+                  </div>                  
+                  <br>
+                  <div>
+                     <div class="modal-body">
+                        <p>12. The <em>modules</em> utility sets up your environment paths for particular versions of specified programs. It is possible to use more than one module in your job (just list all the ones you need on separate lines).</p>
+                        <p>For example to use version <code>R 4.3.0 with RStudio 2023</code>, you should load the module called: <code>R/4.3.0  RStudio/22.0.3</code></p>
+                        <p>You can list all available modules on the system using the <code>module avail</code> command.</p>
+                     </div>
+                     <!-- modal-body -->
+                     <p >
+                        List of modules to load for your job, one per line.  
+                     <p>
+                        <label for="modules">Modules:</label>
+                        <textarea id="modules" type="textarea" ></textarea>
+                  </div>       
+                  <br>
+				  
+                  <div>
+                     <p>
+                        13. Enter the command (or commands) that you want to run, one per line. 
+                     <p> For example, <code>R CMD BATCH Rcode.R Rcodeoutput.txt </code>  
+                     </p>
+                     <label for="command">Command: </label>
+                     <textarea id="command" type="text" value="0" ></textarea>
+                  </div>
+                  <br>
+                  <div>
+                     <input class="button-primary" id="makescript" type="button" value="Make Script">
+                  </div>
+                  <div class="row" id="resultswrapper">
+                     <div id="jobscript">
+                        <!-- output to be inserted here -->
+                     </div>
+                     <!-- jobscript -->
+                  </div>
+                  <!-- resultswrapper -->
+                  <div class="row" id="downloadsection" style="display:none">
+                     <div class="twelve columns" id="downloadlink">
+                        <a class="button button-primary" id="downloadanchor" download="sbatch-script.txt">Download this script</a>
+                     </div>
+                     <!-- downloadlink -->
+                  </div>
+                  <!-- downloadsection -->
+               </form>
+            </div>
+            </article>
+      </div>
+      </div>
+
+
+      <script type="text/javascript">
+         // branding
+           var myorganization = "Organization ABC";
+         
+         // these are given initial values in the html document
+           var days = $('#days').val();
+           var hours = $('#hours').val();
+           var minutes = $('#minutes').val();
+           var seconds = $('#seconds').val() || '00';
+           var memory = $('#memory').val();
+           var jobtype = $('#jobtype').val();
+           var cores = $('#cores').val();
+           var directory = $('#workdir').val();
+           var partition = $('#partition').val();
+           var gpus = $('#gpus').val();
+           var gpus = $('#qos').val();
+         
+           var emailJobStart = false;
+           var emailJobEnd = false;
+           var emailJobDie = false;
+         
+           // Write the job script into the HTML document.
+           function setJobScript(text) {
+            $('#jobscript').html('<h4>The job script:<\/h4><div id="jobCode"><pre style="width:800px"><code>' + text + '<\/code><\/pre><\/div>');
+           }
+         
+           // Add a download link
+           function addDownloadLink(text) {
+            var encodedtext = btoa(unescape(encodeURIComponent(text)));
+            $('#downloadanchor').attr('href','data:text/plain;charset=utf-8;base64,' + encodedtext);
+            $('#downloadsection').show();
+           }
+         
+           // Build up the script from its parts and then write it to the HTML document.
+           // The order of the document parts should follow the order of the form
+           // elements as closely as possible.
+           function makeScript() {
+            script = "#!/bin/bash\n# Created by the " + myorganization + " Slurm Job Script Generator\n# " + Date() + "\n\n";
+            script = setJobType(script);
+            script = setName(script);
+            script = setPid(script);
+            script = setCores(script);
+            script = setGpus(script);
+            script = setQos(script);
+            script = setMemory(script);
+            script = setEmail(script);
+            script = setWallTime(script);
+            script += "# check that the script is launched with sbatch\n";
+            script += "if [ \"x$SLURM_JOB_ID\" == \"x\" ]; then\n   echo \"You need to submit your job to the queuing system with sbatch\"\n   exit 1\nfi\n\n";
+            script = setDirectory(script);
+            script = setModules(script);
+            script = setCommand(script);
+            setJobScript(script);
+            addDownloadLink(script);
+           }
+         
+           // Convert a number to a string and pad with leading zeros.
+           // As seen on Stackoverflow: 
+           // http://stackoverflow.com/questions/2998784/how-to-output-integers-with-leading-zeros-in-javascript
+           function pad(num, size) {
+             var s = num+"";
+             while (s.length < size) s = "0" + s;
+             return s;
+           }
+         
+           // Set the walltime section of the script.
+           function setWallTime(script) {
+            // The values of days, hours, minutes are already sanitised.
+            var comment = "# The maximum running time of the job in days-hours:mins:sec\n";
+            var command = "#SBATCH --time=" + days + "-" + hours + ":" + minutes + ":" + seconds + "\n\n";
+            return script + comment + command;
+           }
+         
+         
+           // Set the memory section of the script.
+           function setMemory(script) {
+            // The value of memory is already sanitised.
+            // If memory is empty then leave the script unchanged.
+            var memoryInMB = parseInt(memory) * 1024;
+            if (memory.length != 0) {
+               // The value of the jobtype determines how memory is set.
+                          if (jobtype == "multithreaded" || jobtype == "single") {
+                                 var comment = "# The amount of memory in megabytes per node:\n";
+                                 var command = "#SBATCH --mem=" + memoryInMB + "\n";
+                          } else if (jobtype == "mpi") {
+                                 var comment = "# The amount of memory in megabytes per cpu core:\n";
+                                 var command = "#SBATCH --mem-per-cpu=" + memoryInMB + "\n";
+                          } else {
+                                 // unknown job type, just ignore it, user should have selected from drop down list
+                                 var command = "\n";
+                          }
+                  return script + comment + command + "\n";
+            }
+            else
+               return script;
+           }
+         
+           // Set the email section of the script.
+           function setEmail(script) {
+            // Check if an email address was specified.
+            var address = sanitiseString($("#emailaddress").val());
+            if (address.length != 0) {
+               var addressComment = "# Use this email address:\n";
+               var addressCommand = "#SBATCH --mail-user=" + address + "\n\n";
+               script += addressComment + addressCommand;
+            }
+            // check if any specific email events were requested.
+            if ((emailJobStart || emailJobEnd || emailJobDie) && (address.length != 0)) {
+               // Build up the comment and command based on the settings.
+               script += "# Send yourself an email when the job:\n";
+               if (emailJobDie) {
+                  script += "# aborts abnormally (fails)\n";
+                  script += "#SBATCH --mail-type=FAIL\n";
+               }
+               if (emailJobStart) {
+                  script += "# begins\n";
+                  script += "#SBATCH --mail-type=BEGIN\n";
+               }
+               if (emailJobEnd) {
+                  script += "# ends successfully\n";
+                  script += "#SBATCH --mail-type=END\n";
+               }
+               script += "\n";
+            }
+            return script;
+           }
+         
+           // Set the QoS section of the script
+           function setQos(script) {
+             // Check if the QoS is set
+             var qos = sanitiseString($("#qos").val());
+             if (qos.length != 0) {
+               var qosComment = "# Slurm QoS:\n";
+               var qosCommand = "#SBATCH --qos=" + qos + "\n\n";
+               script += qosComment + qosCommand;
+             }
+             return script;
+           }
+         
+           // set the project ID (account) of the job
+           function setPid(script) {
+            // Sanitise the project ID
+            var pid = sanitiseString($('#projectid').val());
+            if (pid.length != 0) {
+               var comment = "# The project ID which this job should run under:\n";
+               var command = '#SBATCH --account="' + pid + '"\n\n';
+               return script + comment + command;
+            }
+            else
+               return script;
+           }
+         
+           // Set the job name section of the script.
+           function setName(script) {
+            // Sanitise the job name 
+            var name = sanitiseString($('#name').val());
+            if (name.length != 0) {
+               var comment = "# The name of the job:\n";
+               var command = '#SBATCH --job-name="' + name + '"\n\n';
+               return script + comment + command;
+            }
+            else
+               return script;
+           }
+         
+           // Set the CPU cores section of the script.
+           function setCores(script) {
+            var comment = "# Maximum number of tasks/CPU cores used by the job:\n";
+            if (jobtype == "single") {
+               var command = "#SBATCH --ntasks=1\n#SBATCH --cpus-per-task=1\n";
+            } else if (jobtype == "multithreaded") {
+               var command = "#SBATCH --ntasks=1\n#SBATCH --cpus-per-task=" + cores + "\n";
+            } else if (jobtype == "mpi") {
+               var command = "#SBATCH --ntasks=" + cores + "\n";
+            } else {
+               // unknown job type, just ignore it, user should have selected from drop down list
+               var command = "\n";
+            }
+            return script + comment + command + '\n';
+           }
+          
+           // Set the GRES requirement for the job.
+           function setGpus(script) {
+            if (partition == "gpu-a100" || partition == "deeplearn" || partition == "gpgputest") {
+              var comment = "# Number of GPUs requested per node:\n";
+              var command = "#SBATCH --gres=gpu:" + gpus + "\n";
+            } else {
+              var comment = "";
+              var command = "";
+            }
+            return script + comment + command;
+           }
+         
+           // Set the jobtype section of the script.
+           function setJobType(script) {
+            // The value of jobtype is determined by a select box.
+            var comment = "# Partition for the job:\n";
+            if (jobtype == "multithreaded" || jobtype == "single" ) {
+               var comment2 = "# Multithreaded (SMP) job: must run on one node \n";
+               var command = "#SBATCH --partition=" + partition + "\n\n";
+               var command2 = "#SBATCH --nodes=1\n\n";
+               return script + comment + command + comment2 + command2;
+            } else {
+               var command = "#SBATCH --partition=" + partition + "\n\n";
+               return script + comment + command;
+            }
+           }
+         
+           // Set the directory section of the script.
+           // XXX perhaps we should use the -d flag of PBS?
+           function setDirectory(script) {
+            // The value of directory is determined by a radio button.
+            if (directory == "homedir") {
+               var comment = "# Run the job from your home directory:\n";
+               return script + comment + "cd $HOME\n\n";
+            }
+            else if (directory == "workdir") {
+               var comment = "# Run the job from the directory where it was launched (default)\n\n";
+               return script + comment;
+            }
+            // Allow the user to specify their directory explicitly.
+            else if (directory == "otherdir") {
+               var otherDirName = sanitiseString($('#otherdirname').val());
+               if (otherDirName.length != 0) {
+                  var comment = "# Run the job from this directory:\n";
+                  return script + comment + "cd " + otherDirName + "\n\n";
+               }
+               else
+                  return script;
+            }
+           }
+         
+           // Set the modules section of the script.
+           function setModules(script) {
+            // don't clean the string here, we do it on the split lines
+            var command = $('#modules').val();
+         
+            if (command.length != 0) {
+               var comment = "# The modules to load:\n";
+               // Split the modules into lines so we can prefix "module load" on the front of each.
+               var lines = command.split('\n');
+               var newScript = script + comment;
+               $.each(lines, function (index, value) {
+                  value = sanitiseString(value);
+                  if (value.length != 0) {
+                     if ((/^module load/).test(value)) {
+                        newScript += value + '\n';
+                     }
+                     else {
+                        newScript += 'module load ' + value + '\n';
+                     }
+                  }
+               });
+               return newScript + '\n';
+            }
+            else
+               return script;
+           }
+         
+           // Set the command section of the script.
+           function setCommand(script) {
+            // don't trim the string
+            var command = escapeHTML($('#command').val());
+         
+            if (command.length != 0) {
+               var comment = "# The job command(s):\n";
+               return script + comment + command + '\n\n';
+            }
+            else
+               return script;
+           }
+         
+           // Check if a string is a positive integer.
+           function isInt(n) {
+            var reInt = new RegExp(/^\d+$/);
+            if (!reInt.test(n)) {
+               return false;
+            }
+            return true;
+           }
+         
+           // Check if a string is empty or an integer
+           function isEmptyOrInt (str) {
+            return (str.length == 0 || isInt(str));
+           }
+         
+           // Validate an object's value.
+           function validateAndUpdate(obj, validator, updater, def) {
+            // Don't sanitise here, leave it to the validator
+            var value = obj.val();
+            if (validator(value)) {
+               updater(value);
+               obj.css("background-color","#FFFFFF");
+            }
+            else {
+                obj.val(def);
+                obj.css("background-color","#FF2222");
+            }
+           }
+         
+           // trim off whitespace and escape HTML
+           function sanitiseString(str) {
+             return escapeHTML(str.trim());
+           }
+         
+           // I can't believe there isn't a standard way in Javascript to do this:
+           function escapeHTML(str)
+           {
+            return jQuery('<pre>').text(str).html();
+           }
+         
+           // Event handlers
+         
+           $('#days').change(function () {
+            validateAndUpdate ($(this), isInt, function (x) { days = x; }, '0')
+           });
+           $('#hours').change(function () {
+            validateAndUpdate ($(this), isInt, function (x) { hours = x; }, '0')
+           });
+           $('#minutes').change(function () {
+            validateAndUpdate ($(this), isInt, function (x) { minutes = x; }, '0')
+           });
+           $('#seconds').change(function () {
+             validateAndUpdate ($(this), isInt, function (x) { seconds = x; }, '0')
+           });
+           $('#memory').change(function () {
+             validateAndUpdate ($(this), isEmptyOrInt, function (x) { memory = x; }, '')
+           });
+           $('#jobtype').change(function () {
+             jobtype = $(this).val();
+             if (jobtype == 'single') {
+                 $('#coressection').hide();
+                 $('#coressectionheading').hide();
+             }
+             if (jobtype == 'mpi' || jobtype == 'multithreaded') {
+                 $('#coressection').show();
+                 $('#coressectionheading').show();
+             }
+           });
+           $('#cores').change(function () {
+            validateAndUpdate ($(this), isInt, function (x) { cores = x; }, '1')
+           });
+           $('#gpus').change(function () {
+            validateAndUpdate ($(this), isInt, function (x) { gpus = x; }, '0')
+           });
+           $('#partition').change(function () {
+             partition = $(this).val();
+           });
+           $('#workdir').change(function () {
+             directory = $(this).val();
+           });
+           $('#homedir').change(function () {
+             directory = $(this).val();
+           });
+           $('#otherdir').change(function () {
+             directory = $(this).val();
+           });
+           $('#makescript').click(function () {
+            makeScript();
+            window.scrollTo(0,document.body.scrollHeight);
+           });
+           $('#emailjobstart').change(function () {
+            emailJobStart = $(this).is(":checked");
+           });
+           $('#emailjobend').change(function () {
+            emailJobEnd = $(this).is(":checked");
+           });
+           $('#emailjobdie').change(function () {
+            emailJobDie = $(this).is(":checked");
+           });
+         
+           // attach the click handlers to each of the help buttons
+           var helpNames = ["name", "projectid", "jobtype", "cores", "memory", "time", "dir", "command", "modules", "email"];
+         
+           $.each(helpNames, function(index, value) {
+            $('#show' + value + "help").click(function () {
+                 var buttonLabel = $(this).val();
+                 if (buttonLabel == "help") {
+                    $(this).val("hide help");
+                }
+                else {
+                    $(this).val("help");
+                }
+                 $('#' + value + "help").toggle();
+            });
+           });
+         
+      </script>
+	  <br><br><br>
+      <script type="text/javascript">
+         document.write("Web page last updated: " + document.lastModified);
+      </script>    
+   </body>
+   
+</html>
